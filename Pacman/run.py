@@ -10,9 +10,12 @@ from pauser import Pause
 from text import TextGroup
 from sprites import LifeSprites
 from sprites import MazeSprites
+import matplotlib.pyplot as plt
+from pacman import episode_pellets, episode_time
+from agentPac import AgentP
 
 class GameController(object):
-    def __init__(self):
+    def __init__(self): 
         pygame.init()
         self.screen = pygame.display.set_mode(SCREENSIZE, 0, 32)
         self.background = None
@@ -65,6 +68,7 @@ class GameController(object):
         self.nodes.connectHomeNodes(homekey, (12,14), LEFT)
         self.nodes.connectHomeNodes(homekey, (15,14), RIGHT)
         self.pacman = Pacman(self.nodes.getNodeFromTiles(15, 26))
+        self.agent = AgentP()#new
         self.pellets = PelletGroup("maze1.txt")
         self.ghosts = GhostGroup(self.nodes.getStartTempNode(), self.pacman)
         self.ghosts.blinky.setStartNode(self.nodes.getNodeFromTiles(2+11.5, 0+14))
@@ -100,6 +104,8 @@ class GameController(object):
             afterPauseMethod()
         self.checkEvents()
         self.render()
+        state = self.agent.get_state(self.pacman) #new
+        print (state)#new
 
     def updateScore(self, points):
         self.score += points
@@ -108,7 +114,9 @@ class GameController(object):
     def checkEvents(self):
         for event in pygame.event.get():
             if event.type == QUIT:
-                exit()
+                pygame.quit()
+                self.plotResults()
+                quit()
             elif event.type == KEYDOWN:
                 if event.key == K_SPACE:
                     if self.pacman.alive:
@@ -134,6 +142,11 @@ class GameController(object):
                     self.nodes.allowHomeAccess(ghost)
                 elif ghost.mode.current is not SPAWN:
                      if self.pacman.alive:
+                         episode_pellets.append(self.pacman.pellets_eaten)
+                         episode_time.append(self.pacman.time_alive)
+                         self.pacman.pellets_eaten = 0
+                         self.pacman.time_alive = 0.0
+
                          self.lives -=  1
                          self.lifesprites.removeImage()
                          self.pacman.die()
@@ -194,6 +207,22 @@ class GameController(object):
             y = SCREENHEIGHT - self.lifesprites.images[i].get_height()
             self.screen.blit(self.lifesprites.images[i], (x, y))
         pygame.display.update()
+
+    def plotResults(self): #new
+        plt.figure()
+        plt.plot(episode_pellets, marker='o')
+        plt.xlabel("Episode (1 life = 1 episode)")
+        plt.ylabel("Pellets Collected")
+        plt.title("Untrained agent (random movement)")
+        plt.show()
+
+        plt.figure()
+        plt.plot(episode_time, marker='o')
+        plt.xlabel("Episode 1 life = 1 episode")
+        plt.ylabel("Time alive (s)")
+        plt.title("Untrained agent (random movement)")
+        plt.show()
+
 
 
 if __name__ == "__main__":

@@ -4,7 +4,10 @@ from vector import Vector2
 from constants import *
 from entity import Entity
 from sprites import PacmanSprites
+import random
 
+episode_pellets = [0]
+episode_time = [0.0]
 
 class Pacman(Entity):
     def __init__(self, node):
@@ -17,6 +20,8 @@ class Pacman(Entity):
         self.radius = 10
         self.color = YELLOW
         self.direction = LEFT
+        self.nextDirection = STOP #new
+        self.time_alive = 0.0 #new
         self.setBetweenNodes(LEFT)
         self.node = node
         # self.setPosition()
@@ -24,6 +29,9 @@ class Pacman(Entity):
         self.collideRadius = 5
         self.alive = True
         self.sprites = PacmanSprites(self)
+        
+        self.steps = 0 #new
+        self.pellets_eaten = 0 #new
 
     def setPosition(self):
         self.position = self.node.position.copy()
@@ -35,28 +43,60 @@ class Pacman(Entity):
         self.alive = True
 
     def die(self):
+        #episode_pellets.append(self.pellets_eaten)
+        #episode_time.append(self.time_alive)
+        
         self.alive = False
         self.direction = STOP
+        #self.steps = 0
+        #self.pellets_eaten = 0
+        #self.time_alive = 0.0
 
     def update(self, dt):
+
+        self.steps +=1
+        self.time_alive += dt
         self.sprites.update(dt)
-        self.position += self.directions[self.direction] * self.speed * dt
-        direction = self.getValidKey()
+        self.position += self.directions[self.direction]*self.speed*dt
+
         if self.overshotTarget():
             self.node = self.target
+
             if self.node.neighbors[PORTAL] is not None:
                 self.node = self.node.neighbors[PORTAL]
-            self.target = self.getNewTarget(direction)
+
+            self.nextDirection = self.getValidKey() #if its close to a wall peak up a direction
+
+            self.target = self.getNewTarget(self.nextDirection)
             if self.target is not self.node:
-                self.direction = direction
+                self.direction = self.nextDirection
             else:
                 self.target = self.getNewTarget(self.direction)
+            
             if self.target is self.node:
                 self.direction = STOP
+            
             self.setPosition()
-        else:
-            if self.oppositeDirection(direction):
-                self.reverseDirection()
+
+    #def update(self, dt):
+    #    self.sprites.update(dt)
+    #    self.position += self.directions[self.direction] * self.speed * dt
+    #    direction = self.getValidKey()
+    #    if self.overshotTarget():
+    #        self.node = self.target
+    #        if self.node.neighbors[PORTAL] is not None:
+    #            self.node = self.node.neighbors[PORTAL]
+    #        self.target = self.getNewTarget(direction)
+    #        if self.target is not self.node:
+    #            self.direction = direction
+    #        else:
+    #            self.target = self.getNewTarget(self.direction)
+    #        if self.target is self.node:
+    #            self.direction = STOP
+    #        self.setPosition()
+    #    else:
+    #        if self.oppositeDirection(direction):
+    #            self.reverseDirection()
 
     def validDirection(self, direction):
         if direction is not STOP:
@@ -68,18 +108,22 @@ class Pacman(Entity):
         if self.validDirection(direction):
             return self.node.neighbors[direction]
         return self.node
-
+    
     def getValidKey(self):
-        key_pressed = pygame.key.get_pressed()
-        if key_pressed[K_UP]:
-            return UP
-        if key_pressed[K_DOWN]:
-            return DOWN
-        if key_pressed[K_LEFT]:
-            return LEFT
-        if key_pressed[K_RIGHT]:
-            return RIGHT
-        return STOP
+        return random.choice([UP,DOWN,LEFT,RIGHT])
+    
+
+    ##def getValidKey(self):
+        #key_pressed = pygame.key.get_pressed()
+        #if key_pressed[K_UP]:
+        #    return UP
+        #if key_pressed[K_DOWN]:
+        #    return DOWN
+        #if key_pressed[K_LEFT]:
+        #    return LEFT
+        #if key_pressed[K_RIGHT]:
+        #    return RIGHT
+        #return STOP
 
     def overshotTarget(self):
         if self.target is not None:
@@ -105,6 +149,7 @@ class Pacman(Entity):
     def eatPellets(self, pelletList):
         for pellet in pelletList:
             if self.collideCheck(pellet):
+                self.pellets_eaten +=1 #new, updates how many pellets eaten
                 return pellet
         return None
 
