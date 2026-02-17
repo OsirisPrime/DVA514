@@ -27,6 +27,10 @@ class GameController(object):
         self.score = 0
         self.textgroup = TextGroup()
         self.lifesprites = LifeSprites(self.lives)
+        self.nextDirection = STOP
+        self.lastPelletCount = 0
+
+        self.agent = AgentP()#new
 
     def restartGame(self):
         self.lives = NUMLIVES
@@ -68,7 +72,6 @@ class GameController(object):
         self.nodes.connectHomeNodes(homekey, (12,14), LEFT)
         self.nodes.connectHomeNodes(homekey, (15,14), RIGHT)
         self.pacman = Pacman(self.nodes.getNodeFromTiles(15, 26))
-        self.agent = AgentP()#new
         self.pellets = PelletGroup("maze1.txt")
         self.ghosts = GhostGroup(self.nodes.getStartTempNode(), self.pacman)
         self.ghosts.blinky.setStartNode(self.nodes.getNodeFromTiles(2+11.5, 0+14))
@@ -92,20 +95,50 @@ class GameController(object):
         self.textgroup.update(dt)
         self.pellets.update(dt)
         if not self.pause.paused:
-            self.pacman.update(dt)
-            self.ghosts.update(dt)
-            if self.fruit is not None:
-                self.fruit.update(dt)
+
+            if self.pacman.overshotTarget(): #new, pacman is in a node and can change direction
+                old_state = self.agent.get_state(self.pacman, self.ghosts) #agent reads current state/position
+                action = self.agent.get_action(old_state) #agent choose direction based on current state
+                
+                if action is not None:
+                    self.pacman.nextDirection = action #new saves the agenst choosment.
+
+                self.pacman.update(dt)
+                self.ghosts.update(dt)
+                if self.fruit is not None:
+                    self.fruit.update(dt)
+                
+                #calculate new_state and reward
+                new_state = self.agent.get_state(self.pacman, self.ghosts)
+                pellets_eaten=self.pellets.numEaten > self.lastPelletCount#new, checks if pacman ate a pellet(true,false)
+                self.lastPelletCount = self.pellets.numEaten #saves amoint of eaten pelets, checks next frame if the amount pellets have increased
+            
+                dead = not self.pacman.alive #checks if pacman has died (trie or false)
+                reward = self.agent.get_reward(self.pacman, pellets_eaten, dead)#new sends pacmans state, amount of eaten pellets, if pacman have died or not, den its gets reward or not. 
+                self.agent.update_q(reward, new_state)
+                print("Old state:", self.agent.last_state)
+                print("New state:", new_state)
+                print("Reward:", reward)
+                print("Q-table size:", len(self.agent.weights))
+                print("-----------")
+            else:
+                # Om inte i node → bara fortsätt rörelsen
+                self.pacman.update(dt)
+                self.ghosts.update(dt)
+
+                if self.fruit is not None:
+                    self.fruit.update(dt)
+
             self.checkPelletEvents()
             self.checkGhostEvents()
             self.checkFruitEvents()
+
         afterPauseMethod = self.pause.update(dt)
         if afterPauseMethod is not None:
             afterPauseMethod()
         self.checkEvents()
         self.render()
-        state = self.agent.get_state(self.pacman) #new
-        print (state)#new
+        
 
     def updateScore(self, points):
         self.score += points

@@ -110,7 +110,8 @@ class Pacman(Entity):
         return self.node
     
     def getValidKey(self):
-        return random.choice([UP,DOWN,LEFT,RIGHT])
+        return self.nextDirection
+        #return random.choice([UP,DOWN,LEFT,RIGHT])
     
 
     ##def getValidKey(self):

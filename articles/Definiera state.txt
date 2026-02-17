@@ -1,0 +1,17 @@
+Definiera state
+
+Definiera actions
+
+Definiera reward
+
+Skapa Q-tabell
+
+ε-greedy val
+
+Q-uppdatering
+
+Episoder = liv
+
+Träna
+
+Jämför med baseline
