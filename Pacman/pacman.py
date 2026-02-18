@@ -19,7 +19,7 @@ class Pacman(Entity):
         self.direction = LEFT
         self.setBetweenNodes(LEFT)
         self.node = node
-        # self.setPosition()
+        self.setPosition()
         self.target = node
         self.collideRadius = 5
         self.alive = True
@@ -70,6 +70,8 @@ class Pacman(Entity):
         return self.node
 
     def getValidKey(self):
+        if getattr(self, "use_ai", False):
+            return getattr(self, "ai_direction", STOP)
         key_pressed = pygame.key.get_pressed()
         if key_pressed[K_UP]:
             return UP
