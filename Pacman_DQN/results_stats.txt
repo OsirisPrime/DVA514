@@ -1,0 +1,32 @@
+========================================================
+  DQN PAC-MAN  —  TRAINING SUMMARY
+========================================================
+  Total episodes      : 2,250
+  Total steps         : 210,000
+  Final epsilon (ε)   : 0.1572
+
+  Reward (shaped)
+    All-time mean     : +332.0
+    All-time std      : 254.8
+    Last 50-ep mean  : +791.0
+    Best episode      : +2531.0
+
+  Game score
+    All-time mean     : 538.3
+    Last 50-ep mean  : 1062.4
+    Best episode      : 2530
+
+  Pellets eaten / episode
+    All-time mean     : 48.7
+    Last 50-ep mean  : 87.0
+    Max               : 158
+
+  Episode outcomes
+    Wins              : 0  (0.0%)
+    Deaths            : 2250  (100.0%)
+    Timeouts          : 0  (0.0%)
+
+  Training loss
+    Mean              : 1.0264
+    Final 1k-step avg : 1.1381
+========================================================
